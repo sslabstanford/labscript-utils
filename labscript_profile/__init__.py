@@ -22,7 +22,8 @@ from getpass import getuser
 # directory instead of /root if we are running with sudo (such as at install time for a
 # system-wide install).
 try:
-    LABSCRIPT_SUITE_PROFILE = Path("~" + getuser()).expanduser() / 'labscript-suite'
+#    LABSCRIPT_SUITE_PROFILE = Path("~" + getuser()).expanduser() / 'labscript-suite'
+    LABSCRIPT_SUITE_PROFILE = Path('C:\labscript-suite')
 except Exception:
     # Python starting up in some funky environment? Not our problem, be silent.
     LABSCRIPT_SUITE_PROFILE = None
