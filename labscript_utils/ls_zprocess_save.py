@@ -13,12 +13,12 @@
 import sys
 import os
 from socket import gethostbyname
-from packaging.version import Version
+from distutils.version import LooseVersion
 import zmq
 
 import zprocess
 import zprocess.process_tree
-from zprocess.security import SecureContext, SecureSocket
+from zprocess.security import SecureContext
 from labscript_utils.labconfig import LabConfig
 from labscript_utils import dedent
 import zprocess.zlog
@@ -248,19 +248,10 @@ class Context(SecureContext):
         # Super required to call unbound class method of parent class:
         return super(Context, cls).instance(shared_secret=config['shared_secret'])
 
-    def socket(self, socket_type, socket_class=None, **kwargs):
-        # socket_class kwarg introduced in pyzmq 25. Pass it through if it was given,
-        # otherwise don't.
-        if socket_class is not None:
-            kwargs['socket_class'] = socket_class
-        # Only insert our security-related args to the socket if we know it's going to
-        # be a SecureSocket. If caller has explicitly requested a different socket type
-        # (e.g since pyzmq 25, ThreadAuthenticator sets up an internal socket by calling
-        # `Context.socket(..., socket_class=zmq.Socket)), then don't.`
-        if socket_class is None or issubclass(socket_class, SecureContext):
-            config = get_config()
-            kwargs['allow_insecure'] = config['allow_insecure']
-        return SecureContext.socket(self, socket_type=socket_type, **kwargs)
+    def socket(self, *args, **kwargs):
+        config = get_config()
+        kwargs['allow_insecure'] = config['allow_insecure']
+        return SecureContext.socket(self, *args, **kwargs)
 
 
 def Lock(*args, **kwargs):
@@ -346,7 +337,7 @@ def connect_to_zlock_server():
     global _zlock_server_supports_readwrite
     if hasattr(client, 'get_protocol_version'):
         version = client.get_protocol_version()
-        if Version(version) >= Version('1.1.0'):
+        if LooseVersion(version) >= LooseVersion('1.1.0'):
             _zlock_server_supports_readwrite = True
 
     # The user can call these functions to change the timeouts later if they
